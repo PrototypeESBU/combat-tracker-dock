@@ -46,6 +46,26 @@ export class CombatantPortrait {
         return false;
     }
 
+    get isEvent() {
+        return this.combatant.flags[MODULE_ID]?.event ?? false;
+    }
+
+    get eventResource() {
+        if (!this.isEvent) return null;
+        const flags = this.combatant.flags[MODULE_ID];
+        const {duration, roundCreated} = flags;
+        const currentRound = this.combat.round;
+        return {
+            max: duration,
+            value: duration - (currentRound - roundCreated),
+            percentage: Math.round((duration - (currentRound - roundCreated)) / duration * 100),
+        };
+    }
+
+    get eventRoundsLeft() {
+        return this.combatant.getFlag(MODULE_ID, "roundsLeft") ?? 0;
+    }
+
     activateCoreListeners() {
         this.element.addEventListener("mouseenter", this._onHoverIn.bind(this));
         this.element.addEventListener("mouseleave", this._onHoverOut.bind(this));
@@ -187,7 +207,10 @@ export class CombatantPortrait {
         this.resolve(true);
     }
 
-    getResource(resource = null) {
+    getResource(resource = null, primary = false) {
+
+        if (this.isEvent && primary) return this.eventResource;
+
         if (!this.actor || !this.combat) return null;
 
         resource = resource ?? this.combat.settings.resource;
@@ -279,7 +302,7 @@ export class CombatantPortrait {
         else if (displayDescriptionsSetting === "owner") displayDescriptions = hasPermission;
 
         // Prepare turn data
-        const resource = hasPermission ? this.getResource() : null;
+        const resource = hasPermission ? this.getResource(null, true) : null;
         const resource2 = hasPermission ? this.getResource(game.settings.get(MODULE_ID, "resource")) : null;
         const portraitResourceSetting = game.settings.get(MODULE_ID, "portraitResource");
         const portraitResource = hasPermission && portraitResourceSetting ? this.getResource(portraitResourceSetting) : null;
@@ -347,7 +370,10 @@ export class CombatantPortrait {
         const precision = CONFIG.Combat.initiative.decimals;
         if (turn.hasRolled && typeof turn.initiative == "number") turn.initiative = turn.initiative.toFixed(hasDecimals ? precision : 0);
         if (turn.hasRolled && typeof turn.initiativeData.value == "number") turn.initiativeData.value = turn.initiativeData.value.toFixed(hasDecimals ? precision : 0);
-
+        if (!game.user.isGM && !combatant.actor?.isOwner && game.settings.get(MODULE_ID, "hideEnemyInitiative")) {            
+            turn.initiative = "?";
+            turn.initiativeData.value = "?";
+        }
         return turn;
     }
 
@@ -392,18 +418,21 @@ export class CombatantPortrait {
 
     getBorderColor(tokenDocument) {
         if (!game.settings.get(MODULE_ID, "showDispositionColor") || !tokenDocument) return "#000";
-        let color;
-        const d = tokenDocument.disposition;
-        const colors = CONFIG.Canvas.dispositionColors;
-        if (!game.user.isGM && this.isOwner) color = colors.CONTROLLED;
-        else if (this.actor?.hasPlayerOwner) color = colors.PARTY;
-        else if (d === CONST.TOKEN_DISPOSITIONS.FRIENDLY) color = colors.FRIENDLY;
-        else if (d === CONST.TOKEN_DISPOSITIONS.NEUTRAL) color = colors.NEUTRAL;
-        else if (d === CONST.TOKEN_DISPOSITIONS.HOSTILE) color = colors.HOSTILE;
-        else if (d === CONST.TOKEN_DISPOSITIONS.SECRET && this.isOwner) color = colors.SECRET;
-        else color = colors.NEUTRAL;
-        color = new Color(color).toString();
-        return color;
+        
+        function getColor() {
+            const colors = CONFIG.Canvas.dispositionColors;
+            if ( tokenDocument.isOwner && !game.user.isGM ) return colors.CONTROLLED;
+            const D = CONST.TOKEN_DISPOSITIONS;
+            switch ( tokenDocument.disposition ) {
+              case D.SECRET: return colors.SECRET;
+              case D.HOSTILE: return colors.HOSTILE;
+              case D.NEUTRAL: return colors.NEUTRAL;
+              case D.FRIENDLY: return tokenDocument.actor?.hasPlayerOwner ? colors.PARTY : colors.FRIENDLY;
+              default: return colors.NEUTRAL;
+            }
+        }
+
+        return new Color(getColor()).toString();
     }
 
     destroy() {

@@ -474,11 +474,111 @@ export function defaultAttributesConfig() {
                 units: game.i18n.localize("swnr.sheet.vs"),
             },
         ],
+        wwn: [
+            {
+                attr: "hp.value",
+                icon: "fas fa-heart",
+                units: "Hit Points",
+            },
+            {
+                attr: "details.strain.value",
+                icon: "fas fa-ankh",
+                units: "System Strain",
+            },            
+            {
+                attr: "aac.value",
+                icon: "fas fa-shield",
+                units: "Armor Class",
+            },
+            {
+                attr: "movement.base",
+                icon: "fas fa-person-running",
+                units: "ft. Movement",
+            },
+            {
+                attr: "saves.evasion.value",
+                icon: "fas fa-bullseye",
+                units: "Evasion Save",
+            },
+            {
+                attr: "saves.mental.value",
+                icon: "fas fa-brain",
+                units: "Mental Save",                
+            },
+            {
+                attr: "saves.physical.value",
+                icon: "fas fa-hand-fist",
+                units: "Physical Save",
+            },
+            {
+                attr: "saves.luck.value",
+                icon: "fas fa-star",
+                units: "Luck Save",
+            },
+        ],        
+        ars: [
+            {
+                attr: "attributes.hp.value",
+                icon: "fas fa-heart",
+                units: "Hit Points",
+            },         
+            {
+                attr: "attributes.ac.value",
+                icon: "fas fa-shield",
+                units: "Armor Class",
+            },
+            {
+                attr: "attributes.movement.value",
+                icon: "fas fa-person-running",
+                units: "Movement",
+            },
+            {
+                attr: "attributes.thaco.value",
+                icon: "fas fa-swords",
+                units: "THAC0",
+            },            
+        ],                
         lancer: [
             { attr: "hp.value", icon: "mdi mdi-heart-outline", units: "" },
             { attr: "structure.value", icon: "cci cci-structure", units: "" },
             { attr: "heat.value", icon: "cci cci-heat", units: "" },
             { attr: "stress.value", icon: "cci cci-reactor", units: "" },
+        ],
+        dc20rpg: [
+            {
+                attr: "resources.health.value",
+                icon: "fas fa-heart",
+                units: "HP",
+            },
+            {
+                attr: "resources.mana.value",
+                icon: "fas fa-star",
+                units: "MP",
+            },
+            {
+                attr: "resources.stamina.value",
+                icon: "fas fa-hand-fist",
+                units: "SP",
+            },
+            {
+                attr: "defences.physical.value",
+                icon: "fas fa-shield",
+                units: "PD",
+            },
+            {
+                attr: "defences.mystical.value",
+                icon: "fas fa-wand-magic-sparkles",
+                units: "MD",
+            },
+            {
+                attr: "movement.ground.value",
+                icon: "fas fa-person-walking",
+                units: "Spaces",
+            },
+        ],
+        shadowdark: [
+            { attr: "attributes.ac.value", icon: "fas fa-shield", units: "AC" },
+            { attr: "attributes.hp.value", icon: "fas fa-heart", units: "HP" },
         ],
     };
 }
@@ -645,24 +745,56 @@ export function generateDescription(actor) {
                     return null;
             }
         case "swnr":
-            switch(type) {
+            switch (type) {
                 case "character":
                     return `${game.i18n.localize("swnr.sheet.level")} ${system.level.value} ${system.background} ${system.class}`;
                 case "npc":
                     return "NPC";
                 case "vehicle":
-                    return "Vehicle"
+                    return "Vehicle";
                 case "ship":
-                    return "Ship"
+                    return "Ship";
                 case "drone":
-                    return "Drone"
+                    return "Drone";
                 case "mech":
-                    return "Mech"
+                    return "Mech";
                 default:
                     return null;
             }
+        case "wwn":
+            switch (type) {
+                case "Character":
+                    return `Level ${system.details.level} ${system.details.background} ${system.details.class}`;
+                case "Faction":
+                    return "Faction";
+                case "Monster":
+                    return `${system.hp.hd} hit dice Monster`;
+                default:
+                    return null;
+            }
+        case "ars":
+            switch (type) {
+                case "character":
+                    return "Player Character";
+                case "lootable":
+                    return "Loot";
+                case "merchant":
+                    return "Merchant";                    
+                case "npc":
+                    return "Non-Player-Character";
+                default:
+                    return null;
+            }            
         case "lancer":
             return game.lancer.combatTrackerDock?.generateDescription(actor);
+        case "shadowdark":
+            switch (type) {
+                case "Player":
+                case "NPC":
+                    return `Level: ${system.level.value}`;
+                default:
+                    return null;
+            }
     }
 }
 
