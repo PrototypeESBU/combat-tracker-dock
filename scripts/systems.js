@@ -792,6 +792,7 @@ export function generateDescription(actor) {
                 case "Player":
                 case "NPC":
                     return `Level: ${system.level.value}`;
+                   return `AC: ${system.attributes.ac.value}`;
                 default:
                     return null;
             }
